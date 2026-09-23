@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#f3efe4">
+    <title>ささクロスワード</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-bar">
+        <button type="button" id="back" class="text-button" hidden>一覧</button>
+        <div class="titles">
+          <p class="brand">ささクロスワード</p>
+          <h1 id="title">問題を選ぶ</h1>
+        </div>
+        <div class="header-actions">
+          <p id="progress" class="progress" hidden></p>
+          <button type="button" id="check" class="ghost-button" hidden>答え合わせ</button>
+          <button type="button" id="reset" class="ghost-button" hidden>最初から</button>
+        </div>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
+    </header>
+    <main id="app"></main>
+    <div id="dock" class="dock" hidden>
+      <p id="dock-clue" class="dock-clue">マスを選んでください</p>
+      <div class="dock-controls">
+        <button type="button" id="dir-button" class="dir-button">ヨコ</button>
+        <label class="entry-label">
+          <span class="visually-hidden" id="entry-label">文字を入力</span>
+          <input id="entry" type="text" lang="ja" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="ここに入力" aria-labelledby="entry-label dock-clue">
+        </label>
+      </div>
+    </div>
+    <dialog id="dialog">
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-body"></p>
+      <div id="dialog-actions" class="dialog-actions"></div>
+    </dialog>
+    <noscript>
+      <p class="noscript">このアプリには JavaScript が必要です。</p>
+    </noscript>
+  </body>
+</html>
