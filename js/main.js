@@ -27,6 +27,7 @@ const state = {
   direction: "across",
   clueTab: "across",
   clearShown: false,
+  userSelected: false,
 };
 
 let routeToken = 0;
@@ -220,7 +221,7 @@ function currentClue() {
 }
 
 function selectCell(row, col, { toggle = false } = {}) {
-  const preferred = toggle
+  const preferred = toggle && state.userSelected
     ? (state.direction === "across" ? "down" : "across")
     : state.direction;
   const direction = chooseDirection(row, col, preferred);
@@ -228,6 +229,7 @@ function selectCell(row, col, { toggle = false } = {}) {
   state.cursor = { row, col };
   state.direction = direction;
   state.clueTab = direction;
+  state.userSelected = true;
   if (!composing) entry.value = "";
   updateBoard();
   entry.focus({ preventScroll: true });
@@ -238,6 +240,7 @@ function selectClue(clue) {
   state.direction = clue.direction;
   state.clueTab = clue.direction;
   state.cursor = { row: target.row, col: target.col };
+  state.userSelected = true;
   if (!composing) entry.value = "";
   updateBoard();
   entry.focus({ preventScroll: true });
@@ -266,6 +269,7 @@ function moveBy(dRow, dCol) {
   state.cursor = { row, col };
   state.direction = direction;
   state.clueTab = direction;
+  state.userSelected = true;
   updateBoard();
 }
 
@@ -672,6 +676,7 @@ async function showPuzzle(id) {
     state.direction = "across";
     state.clueTab = "across";
     state.clearShown = false;
+    state.userSelected = false;
     state.cursor = null;
     renderPlay();
     setChrome({ playing: true, controls: true });
