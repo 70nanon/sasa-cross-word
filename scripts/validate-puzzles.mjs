@@ -2,17 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPuzzle } from "../js/puzzle.js";
-import { createManifest, isValidPuzzleId, listPuzzleIds } from "./generate-manifest.mjs";
+import { isValidPuzzleId, listPuzzleIds } from "./generate-manifest.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-
-function sortKeys(value) {
-  if (Array.isArray(value)) return value.map(sortKeys);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, sortKeys(value[key])]));
-  }
-  return value;
-}
 
 const problems = [];
 const ids = listPuzzleIds(root);
@@ -46,17 +38,6 @@ for (const id of ids) {
     if (!built.ok) {
       for (const item of built.errors) problems.push(`${id}: ${item.message}`);
     }
-  }
-}
-
-const manifestPath = path.join(root, "puzzles", "manifest.json");
-if (!fs.existsSync(manifestPath)) {
-  problems.push("puzzles/manifest.json がありません。npm run manifest を実行してください。");
-} else {
-  const actual = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  const expected = createManifest(root);
-  if (JSON.stringify(sortKeys(actual)) !== JSON.stringify(sortKeys(expected))) {
-    problems.push("puzzles/manifest.json が最新ではありません。npm run manifest を実行してください。");
   }
 }
 

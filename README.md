@@ -13,13 +13,12 @@ js/csv.js           CSV パーサ
 js/puzzle.js        盤面の解析と正解判定の正規化
 js/storage.js       問題ごとの localStorage
 js/main.js          画面と入力
-puzzles/001/        問題データ（grid.csv, clues.csv, meta.json）
-puzzles/manifest.json
-scripts/            一覧の生成、検証、ローカルサーバ、Pages 用のコピー
+puzzles/001/        問題データ（grid.csv, clues.csv, 任意の meta.json）
+scripts/            公開時の一覧生成、検証、ローカルサーバ、Pages 用のコピー
 .github/workflows/pages.yml
 ```
 
-問題データを足しても `js/` は変更しません。パスは `css/style.css` や `puzzles/manifest.json` のように、ページの場所からの相対パスだけを使っています。`https://<user>.github.io/sasa-cross-word/` のようなサブディレクトリでも開けます。
+問題データを足しても `js/` も `manifest.json` も変更しません。公開のたびに `puzzles/` を走査して一覧を作ります。パスは `css/style.css` のように、ページの場所からの相対パスだけを使っています。`https://<user>.github.io/sasa-cross-word/` のようなサブディレクトリでも開けます。
 
 依存パッケージはありません。Node.js 22 以降があれば、テストとローカルサーバを動かせます。
 
@@ -70,8 +69,14 @@ id,direction,clue,answer,row,col
 
 ## 新しいクロスワードを追加する手順
 
-1. `puzzles/002/` のようにフォルダを作ります。名前は英数字、ハイフン、アンダースコアだけにしてください。
-2. `grid.csv` と `clues.csv` を置きます。任意で `meta.json` にタイトルを書けます。
+GitHub の Web UI から `grid.csv` と `clues.csv` を `main` に置くだけで、GitHub Pages に載ります。ソースコードも `manifest.json` も編集しません。
+
+1. リポジトリで **Add file** → **Create new file** を開きます。
+2. ファイル名に `puzzles/002/grid.csv` と入力します。`002/` が新しいフォルダになります。名前は英数字、ハイフン、アンダースコアだけにしてください。
+3. 盤面を貼り付け、**Commit changes** で `main` に直接コミットします。
+4. `puzzles/002` を開き、**Add file** → **Upload files** で `clues.csv` をアップロードして、同じく `main` にコミットします。最初のファイルと同じように、**Create new file** で `puzzles/002/clues.csv` を作っても構いません。
+
+`main` への push で GitHub Actions が `puzzles/` を走査し、両方の CSV があるフォルダだけを一覧にして Pages を更新します。タイトルはフォルダ名です。変えるときだけ、同じフォルダに任意の `meta.json` を置きます。
 
 ```json
 {
@@ -80,14 +85,7 @@ id,direction,clue,answer,row,col
 }
 ```
 
-3. 一覧を更新して、データを検査します。
-
-```bash
-npm run manifest
-npm run validate
-```
-
-`npm run dev` でも、起動時に `puzzles/manifest.json` を作り直します。アプリのソースは触りません。更新した `manifest.json` はコミットしてください。GitHub Actions は、これが古いと公開を止めます。
+片方だけがコミットされた問題は、もう片方の CSV が `main` に入るまで一覧に出ません。CSV の中身に誤りがある場合も公開は止まりません。一覧から開くと、その問題だけエラーが表示されます。
 
 ## ローカルでの動作確認方法
 
@@ -95,9 +93,10 @@ npm run validate
 
 ```bash
 npm test
-npm run validate
 npm run dev
 ```
+
+`npm run dev` は起動時に `puzzles/` から一覧を作ります。この `puzzles/manifest.json` は生成物なので、コミットしません。中身を手元で検査するときは `npm run validate` を使います。
 
 表示された `http://localhost:4173` をブラウザで開きます。`file://` で `index.html` を直接開いても動きません。問題一覧の取得と ES Modules の読み込みに、ローカルサーバが必要です。
 
@@ -117,7 +116,7 @@ npm run dev
 
 ## GitHub Pagesへの公開方法
 
-`.github/workflows/pages.yml` が、`main` への push でテストと検証を実行し、`dist/` を GitHub Pages に公開します。
+`.github/workflows/pages.yml` が、`main` への push でテストしたあと、`puzzles/` から一覧を生成して `dist/` を GitHub Pages に公開します。CSV を追加したコミットも、この流れで公開されます。
 
 初回だけ、リポジトリの Settings → Pages → Build and deployment → Source を **GitHub Actions** にしてください。公開 URL はワークフローの実行結果に出ます。プロジェクトサイトの場合は `https://<user>.github.io/sasa-cross-word/` です。
 
@@ -127,10 +126,11 @@ npm run dev
 
 - バックエンドがないため、正解は CSV に平文で入っています。通信を見れば答えは分かります。
 - 2文字未満の並びは単語にしません。孤立した白マスは、交差するもう一方の単語に属していれば問題ありません。
-- 同じ方向に同じ正解が複数ある場合、`row` と `col` が無いと公開を止めてエラーにします。先に見つかった方へは割り当てません。
+- 同じ方向に同じ正解が複数ある場合、`row` と `col` が無いとその問題を開いたときにエラーになります。先に見つかった方へは割り当てません。サイト全体の公開は止まりません。
 - 判定で同一視するのは、ひらがなとカタカナ、全角と半角、代表的な長音・ハイフンだけです。漢字と、その読みのひらがなは別の文字です。
 - 1マスは1文字です。拗音は `し,ゃ` のように分けて入れてください。
 - 黒マスは半角の `#` だけです。盤面の上限は 40×40 です。
 - 保存はこのブラウザの中だけです。別の端末やシークレットウィンドウとは共有しません。
 - 日本語入力は、その端末の IME に依存します。
-- 問題フォルダを足したあとは `npm run manifest` が必要です。一覧はフォルダの自動探索ではなく `puzzles/manifest.json` を読みます。
+- 公開サイトの一覧は、デプロイ時に `puzzles/` から作ります。ブラウザからフォルダを直接探索することはできません。
+- `grid.csv` と `clues.csv` の片方だけが `main` にある問題は、もう片方が追加されるまで一覧に出ません。

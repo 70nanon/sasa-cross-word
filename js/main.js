@@ -165,7 +165,7 @@ async function showList() {
   try {
     const response = await fetch(asset("puzzles/manifest.json"), { cache: "no-cache" });
     if (!response.ok) {
-      throw new Error("puzzles/manifest.json を読み込めません。npm run manifest を実行してください。");
+      throw new Error("問題一覧を読み込めません。ローカルで開くときは npm run dev を使ってください。");
     }
     const manifest = await response.json();
     if (current !== routeToken) return;
@@ -648,14 +648,14 @@ async function showPuzzle(id) {
   try {
     const response = await fetch(asset("puzzles/manifest.json"), { cache: "no-cache" });
     if (!response.ok) {
-      throw new Error("puzzles/manifest.json を読み込めません。npm run manifest を実行してください。");
+      throw new Error("問題一覧を読み込めません。ローカルで開くときは npm run dev を使ってください。");
     }
     const manifest = await response.json();
     if (current !== routeToken) return;
     const meta = (manifest.puzzles || []).find((puzzle) => puzzle.id === id);
     if (!meta) {
       title.textContent = "問題が見つかりません";
-      renderMessage("問題が見つかりません", "一覧に戻って選び直すか、npm run manifest で一覧を更新してください。");
+      renderMessage("問題が見つかりません", "一覧に戻って選び直してください。新しい問題は、grid.csv と clues.csv の両方が main に入ったあとの公開で一覧に出ます。");
       return;
     }
     state.meta = meta;
