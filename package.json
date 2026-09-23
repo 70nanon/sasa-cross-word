@@ -1,0 +1,12 @@
+{
+  "name": "sasa-cross-word",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "manifest": "node scripts/generate-manifest.mjs",
+    "dev": "node scripts/generate-manifest.mjs && node scripts/dev-server.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test",
+    "validate": "node scripts/validate-puzzles.mjs"
+  }
+}
