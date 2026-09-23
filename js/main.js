@@ -382,6 +382,7 @@ function judge() {
   if (!state.puzzle) return;
   let empty = false;
   let wrong = false;
+  let filled = false;
   const { grid } = state.puzzle;
   for (let row = 0; row < grid.length; row += 1) {
     for (let col = 0; col < grid[row].length; col += 1) {
@@ -392,6 +393,7 @@ function judge() {
         state.marks[row][col] = "";
         continue;
       }
+      filled = true;
       if (sameAnswer(letter, grid[row][col])) state.marks[row][col] = "correct";
       else {
         state.marks[row][col] = "wrong";
@@ -406,9 +408,10 @@ function judge() {
     openClear();
     return;
   }
-  if (empty && wrong) setStatus("未入力のマスと、赤いマスを確認してください");
-  else if (empty) setStatus("未入力のマスがあります");
-  else setStatus("赤いマスを確認してください");
+  if (wrong && empty) setStatus("未入力のマスと、赤いマスを確認してください");
+  else if (wrong) setStatus("赤いマスを確認してください");
+  else if (filled) setStatus("入っている文字は合っています。未入力のマスがあります");
+  else setStatus("未入力のマスがあります");
 }
 
 function resetPuzzle() {
