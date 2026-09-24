@@ -36,12 +36,31 @@ export function listPuzzleIds(root = repoRoot) {
     .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
 }
 
+function puzzleFiles(root, id) {
+  const dir = path.join(root, "puzzles", id);
+  return {
+    dir,
+    gridPath: path.join(dir, "grid.csv"),
+    cluesPath: path.join(dir, "clues.csv"),
+  };
+}
+
+export function listIncompletePuzzleIds(root = repoRoot) {
+  return listPuzzleIds(root).filter((id) => {
+    const { gridPath, cluesPath } = puzzleFiles(root, id);
+    return fs.existsSync(gridPath) !== fs.existsSync(cluesPath);
+  });
+}
+
 export function createManifest(root = repoRoot) {
-  const puzzles = listPuzzleIds(root).map((id) => {
-    const dir = path.join(root, "puzzles", id);
+  const puzzles = [];
+  for (const id of listPuzzleIds(root)) {
+    const { dir, gridPath, cluesPath } = puzzleFiles(root, id);
+    const hasGrid = fs.existsSync(gridPath);
+    const hasClues = fs.existsSync(cluesPath);
+    if (!hasGrid || !hasClues) continue;
+
     const meta = readMeta(dir);
-    const gridPath = path.join(dir, "grid.csv");
-    const cluesPath = path.join(dir, "clues.csv");
     const entry = {
       id,
       title: meta.title || id,
@@ -52,21 +71,23 @@ export function createManifest(root = repoRoot) {
       down: null,
       error: false,
     };
-    if (!isValidPuzzleId(id) || !fs.existsSync(gridPath) || !fs.existsSync(cluesPath) || meta.error) {
+    if (!isValidPuzzleId(id) || meta.error) {
       entry.error = true;
-      return entry;
+      puzzles.push(entry);
+      continue;
     }
     const built = buildPuzzle(fs.readFileSync(gridPath, "utf8"), fs.readFileSync(cluesPath, "utf8"));
     if (!built.ok) {
       entry.error = true;
-      return entry;
+      puzzles.push(entry);
+      continue;
     }
     entry.rows = built.puzzle.rows;
     entry.cols = built.puzzle.cols;
     entry.across = built.puzzle.clues.filter((clue) => clue.direction === "across").length;
     entry.down = built.puzzle.clues.filter((clue) => clue.direction === "down").length;
-    return entry;
-  });
+    puzzles.push(entry);
+  }
   return { puzzles };
 }
 
@@ -75,6 +96,14 @@ export function writeManifest(root = repoRoot) {
   const puzzlesDir = path.join(root, "puzzles");
   fs.mkdirSync(puzzlesDir, { recursive: true });
   fs.writeFileSync(path.join(puzzlesDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  for (const id of listIncompletePuzzleIds(root)) {
+    console.log(`${id}: grid.csv と clues.csv が揃うまで一覧に出しません`);
+  }
+  const errors = manifest.puzzles.filter((puzzle) => puzzle.error).map((puzzle) => puzzle.id);
+  if (errors.length > 0) {
+    console.log(`データエラーとして公開する問題: ${errors.join(", ")}`);
+  }
+  console.log(`catalog: ${manifest.puzzles.map((puzzle) => puzzle.id).join(", ") || "(none)"}`);
   return manifest;
 }
 
